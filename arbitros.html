@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beyblade X — Panel de Árbitros</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!-- ============ FIREBASE (misma base de datos que la app de Torneo) ============ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+  // 🔧 PEGA AQUÍ LA MISMA CONFIGURACIÓN DE FIREBASE QUE USASTE EN LA APP DE TORNEO
+  // Debe ser EXACTAMENTE igual (mismo proyecto) para que ambas apps compartan los datos.
+  const firebaseConfig = {
+    apiKey: "AIzaSyDWab-P5UsssuYMsxP5sK2-xbERsVdcu-Y",
+    authDomain: "beybladex-pac.firebaseapp.com",
+    databaseURL: "https://beybladex-pac-default-rtdb.firebaseio.com",
+    projectId: "beybladex-pac",
+    storageBucket: "beybladex-pac.firebasestorage.app",
+    messagingSenderId: "32415702202",
+    appId: "1:32415702202:web:4f687fe6a2b8b6dc627683"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const dbRef = firebase.database().ref('tournamentState');
+</script>
+
+<style>
+:root {
+  --bg: #030712;
+  --bg2: #0a0f1e;
+  --card: #0d1b2e;
+  --card2: #111827;
+  --border: #1e3a5f;
+  --neon-blue: #00d4ff;
+  --neon-red: #ff2d55;
+  --neon-purple: #bf00ff;
+  --neon-gold: #ffd700;
+  --text: #e2e8f0;
+  --text-dim: #64748b;
+  --glow-blue: 0 0 10px #00d4ff, 0 0 20px #00d4ff44;
+  --glow-red: 0 0 10px #ff2d55, 0 0 20px #ff2d5544;
+  --glow-gold: 0 0 10px #ffd700, 0 0 30px #ffd70066;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Rajdhani', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app { position: relative; z-index: 1; }
+
+header {
+  background: linear-gradient(135deg, #030712 0%, #0a0f1e 50%, #030712 100%);
+  border-bottom: 2px solid var(--neon-red);
+  padding: 20px 16px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+header::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at center, rgba(255,45,85,0.08) 0%, transparent 60%);
+  animation: pulse-bg 4s ease-in-out infinite;
+}
+
+@keyframes pulse-bg {
+  0%,100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.logo-main {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(20px, 5vw, 34px);
+  font-weight: 900;
+  letter-spacing: 4px;
+  background: linear-gradient(90deg, var(--neon-red), #fff, var(--neon-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.logo-sub {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  letter-spacing: 6px;
+  color: var(--neon-red);
+  margin-top: 4px;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-dim);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.tab:hover { border-color: var(--neon-red); color: var(--neon-red); }
+
+.tab.active {
+  background: linear-gradient(135deg, #330011, #550022);
+  border-color: var(--neon-red);
+  color: var(--neon-red);
+  box-shadow: var(--glow-red);
+}
+
+.panel { display: none; padding: 12px; max-width: 900px; margin: auto; }
+.panel.active { display: block; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon-red), transparent);
+  opacity: 0.6;
+}
+
+.card-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--neon-red);
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title .icon { font-size: 18px; }
+
+button {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.btn-blue {
+  background: linear-gradient(135deg, #003366, #005599);
+  color: var(--neon-blue);
+  border: 1px solid var(--neon-blue);
+}
+.btn-blue:hover { box-shadow: var(--glow-blue); transform: translateY(-1px); }
+
+.btn-red {
+  background: linear-gradient(135deg, #330011, #550022);
+  color: var(--neon-red);
+  border: 1px solid var(--neon-red);
+}
+.btn-red:hover { box-shadow: var(--glow-red); transform: translateY(-1px); }
+
+.btn-gold {
+  background: linear-gradient(135deg, #332200, #554400);
+  color: var(--neon-gold);
+  border: 1px solid var(--neon-gold);
+}
+.btn-gold:hover { box-shadow: var(--glow-gold); transform: translateY(-1px); }
+
+.btn-sm { padding: 5px 10px; font-size: 9px; }
+
+.player-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.player-rank {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  width: 32px;
+  text-align: center;
+}
+
+.rank-1 { color: var(--neon-gold); text-shadow: var(--glow-gold); }
+.rank-2 { color: #c0c0c0; }
+.rank-3 { color: #cd7f32; }
+.rank-other { color: var(--text-dim); }
+
+.player-name {
+  font-size: 16px;
+  font-weight: 700;
+  flex: 1;
+  min-width: 100px;
+}
+
+.stat-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.badge-pts {
+  background: rgba(0,212,255,0.15);
+  color: var(--neon-blue);
+  border: 1px solid rgba(0,212,255,0.4);
+}
+.badge-wins {
+  background: rgba(0,255,100,0.1);
+  color: #00ff64;
+  border: 1px solid rgba(0,255,100,0.3);
+}
+.badge-loss {
+  background: rgba(255,45,85,0.1);
+  color: var(--neon-red);
+  border: 1px solid rgba(255,45,85,0.3);
+}
+
+.match-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+  position: relative;
+  transition: border-color 0.2s;
+}
+
+.match-card.active-match {
+  border-color: var(--neon-red);
+  box-shadow: 0 0 12px rgba(255,45,85,0.25);
+  animation: match-glow 2s infinite;
+}
+
+@keyframes match-glow {
+  0%,100% { box-shadow: 0 0 8px rgba(255,45,85,0.2); }
+  50% { box-shadow: 0 0 20px rgba(255,45,85,0.5); }
+}
+
+.match-card.done { border-color: #1a3a1a; opacity: 0.85; }
+
+.round-tag {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--neon-gold);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.fighter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 6px;
+  border-radius: 6px;
+  margin-bottom: 3px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.fighter-row.winner-row {
+  background: linear-gradient(90deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05));
+  color: var(--neon-gold);
+}
+
+.fighter-row.loser-row { opacity: 0.5; }
+
+.vs-divider {
+  text-align: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  color: var(--neon-red);
+  letter-spacing: 2px;
+  padding: 1px 0;
+}
+
+.match-actions { display: flex; gap: 6px; margin-top: 8px; }
+.match-actions button { flex: 1; }
+
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.overlay.show { display: flex; }
+
+.modal {
+  background: var(--card);
+  border: 2px solid var(--neon-red);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 0 40px rgba(255,45,85,0.3);
+  position: relative;
+  animation: modal-in 0.3s ease;
+}
+
+@keyframes modal-in {
+  from { opacity:0; transform: scale(0.9) translateY(20px); }
+  to { opacity:1; transform: scale(1) translateY(0); }
+}
+
+.modal-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--neon-red);
+  text-align: center;
+  letter-spacing: 3px;
+  margin-bottom: 4px;
+  text-shadow: var(--glow-red);
+}
+
+.modal-subtitle {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+}
+
+.correction-warning {
+  background: rgba(255,215,0,0.08);
+  border: 1px solid var(--neon-gold);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--neon-gold);
+  margin-bottom: 12px;
+  line-height: 1.5;
+  display: none;
+}
+.correction-warning.show { display: block; }
+
+.fighters-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin-bottom: 16px;
+}
+
+.fighter-name-big {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(11px, 3vw, 15px);
+  font-weight: 900;
+  text-align: center;
+  max-width: 130px;
+  word-break: break-word;
+}
+
+.f1-name { color: var(--neon-blue); text-shadow: var(--glow-blue); }
+.f2-name { color: var(--neon-red); text-shadow: var(--glow-red); }
+
+.vs-big {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--neon-gold);
+  text-shadow: var(--glow-gold);
+}
+
+.scoreboard {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.score-col { text-align: center; }
+
+.score-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.score-num {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 40px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.score-num.blue { color: var(--neon-blue); text-shadow: var(--glow-blue); }
+.score-num.red  { color: var(--neon-red);  text-shadow: var(--glow-red); }
+
+.score-dash {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 30px;
+  color: var(--text-dim);
+  align-self: center;
+  line-height: 1;
+  padding-top: 20px;
+}
+
+.point-section { margin-bottom: 12px; }
+
+.point-section-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.point-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.pt-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.pt-btn .pt-val { font-size: 18px; font-weight: 900; line-height: 1; }
+
+.pt-btn.p1 {
+  background: rgba(0,212,255,0.1);
+  color: var(--neon-blue);
+  border-color: rgba(0,212,255,0.5);
+}
+.pt-btn.p1:hover { background: rgba(0,212,255,0.25); box-shadow: var(--glow-blue); }
+
+.pt-btn.p2 {
+  background: rgba(255,45,85,0.1);
+  color: var(--neon-red);
+  border-color: rgba(255,45,85,0.5);
+}
+.pt-btn.p2:hover { background: rgba(255,45,85,0.25); box-shadow: var(--glow-red); }
+
+.win-banner {
+  display: none;
+  text-align: center;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05));
+  border: 2px solid var(--neon-gold);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  animation: winner-flash 0.5s ease;
+}
+
+@keyframes winner-flash {
+  0% { opacity:0; transform: scale(0.8); }
+  60% { transform: scale(1.05); }
+  100% { opacity:1; transform: scale(1); }
+}
+
+.win-banner.show { display: block; }
+
+.win-banner-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--neon-gold);
+  text-shadow: var(--glow-gold);
+}
+
+.win-banner-text {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--card);
+  border: 1px solid var(--neon-red);
+  color: var(--neon-red);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  box-shadow: var(--glow-red);
+  transition: transform 0.3s ease;
+  z-index: 200;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+.empty-msg { color: var(--text-dim); font-size: 13px; padding: 8px 0; line-height: 1.6; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="logo-main">⚡ BEYBLADE X ⚡</div>
+  <div class="logo-sub">Panel de Árbitros</div>
+  <div id="syncStatus" style="font-size:10px; letter-spacing:1px; color:var(--text-dim); margin-top:6px">● conectando...</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('battles')">⚔️ Batallas</button>
+  <button class="tab" onclick="showTab('correct')">✏️ Corregir</button>
+  <button class="tab" onclick="showTab('ranking')">📊 Ranking</button>
+</div>
+
+<!-- ============ BATALLAS ACTIVAS ============ -->
+<div class="panel active" id="tab-battles">
+  <div class="card">
+    <div class="card-title"><span class="icon">⚔️</span> Enfrentamientos de la Ronda Actual</div>
+    <div id="activeBattlesList"></div>
+  </div>
+  <div class="card" id="championCardRef" style="display:none"></div>
+</div>
+
+<!-- ============ CORREGIR RESULTADOS ============ -->
+<div class="panel" id="tab-correct">
+  <div class="card">
+    <div class="card-title"><span class="icon">✏️</span> Batallas Finalizadas</div>
+    <div style="font-size:12px; color:var(--text-dim); margin-bottom:10px; line-height:1.5">
+      Toca una batalla para corregir su resultado. Los puntos y estadísticas del blader se recalculan automáticamente.
+    </div>
+    <div id="completedBattlesList"></div>
+  </div>
+</div>
+
+<!-- ============ RANKING (solo lectura) ============ -->
+<div class="panel" id="tab-ranking">
+  <div class="card">
+    <div class="card-title"><span class="icon">🌏</span> Ranking Liga</div>
+    <div id="refRanking"></div>
+  </div>
+</div>
+
+</div><!-- .app -->
+
+<!-- ============ BATTLE MODAL ============ -->
+<div class="overlay" id="battleOverlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">⚡ BATTLE ⚡</div>
+    <div class="modal-subtitle" id="modalSubtitle">Registrar resultado</div>
+
+    <div class="correction-warning" id="correctionWarning">
+      ⚠️ Esta batalla pertenece a una ronda ya avanzada. Si alguno de los bladers ya jugó la siguiente ronda, avisa al administrador para revisar el bracket manualmente.
+    </div>
+
+    <div class="fighters-display">
+      <div class="fighter-name-big f1-name" id="modalF1Name">P1</div>
+      <div class="vs-big">VS</div>
+      <div class="fighter-name-big f2-name" id="modalF2Name">P2</div>
+    </div>
+
+    <div class="scoreboard">
+      <div class="score-col">
+        <div class="score-label" id="scoreLabel1">P1</div>
+        <div class="score-num blue" id="scoreP1">0</div>
+      </div>
+      <div class="score-dash">/</div>
+      <div class="score-col">
+        <div class="score-label" id="scoreLabel2">P2</div>
+        <div class="score-num red" id="scoreP2">0</div>
+      </div>
+    </div>
+
+    <div class="win-banner" id="winBanner">
+      <div style="font-size:36px">🏆</div>
+      <div class="win-banner-name" id="winnerName"></div>
+      <div class="win-banner-text">SET COMPLETE — 4 PUNTOS</div>
+    </div>
+
+    <div class="point-section">
+      <div class="point-section-title" id="p1SectionTitle" style="color:var(--neon-blue)">PUNTOS PARA P1</div>
+      <div class="point-buttons">
+        <button class="pt-btn p1" onclick="addPoint(1,2,'Burst Finish')"><span class="pt-val">+2</span>BURST FINISH</button>
+        <button class="pt-btn p1" onclick="addPoint(1,3,'Xtreme Finish')"><span class="pt-val">+3</span>XTREME FINISH</button>
+        <button class="pt-btn p1" onclick="addPoint(1,2,'Over Finish')"><span class="pt-val">+2</span>OVER FINISH</button>
+        <button class="pt-btn p1" onclick="addPoint(1,1,'Survivor Finish')"><span class="pt-val">+1</span>SURVIVOR</button>
+      </div>
+    </div>
+
+    <div class="point-section">
+      <div class="point-section-title" id="p2SectionTitle" style="color:var(--neon-red)">PUNTOS PARA P2</div>
+      <div class="point-buttons">
+        <button class="pt-btn p2" onclick="addPoint(2,2,'Burst Finish')"><span class="pt-val">+2</span>BURST FINISH</button>
+        <button class="pt-btn p2" onclick="addPoint(2,3,'Xtreme Finish')"><span class="pt-val">+3</span>XTREME FINISH</button>
+        <button class="pt-btn p2" onclick="addPoint(2,2,'Over Finish')"><span class="pt-val">+2</span>OVER FINISH</button>
+        <button class="pt-btn p2" onclick="addPoint(2,1,'Survivor Finish')"><span class="pt-val">+1</span>SURVIVOR</button>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:8px">
+      <button class="btn-red" style="flex:1" onclick="undoPoint()">↩ DESHACER</button>
+      <button class="btn-gold" style="flex:1" onclick="resetScore()">⟲ REINICIAR</button>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:8px">
+      <button class="btn-blue" id="confirmBtn" style="flex:1; display:none" onclick="confirmModal()">✓ CONFIRMAR</button>
+      <button class="btn-red" style="flex:1" onclick="closeModal()">✕ CERRAR</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE (espejo del estado en Firebase — de solo lectura salvo
+// por las funciones de batalla/corrección de este panel)
+// ============================================================
+let state = { players: [], season: 1, bracket: [], currentRound: 0, tournamentDone: false, champion: null, battleLog: [] };
+
+let modalMode = 'new'; // 'new' = registrar batalla activa | 'edit' = corregir batalla finalizada
+let battle = { roundIdx: 0, matchIdx: 0, p1Score: 0, p2Score: 0, history: [], decided: false, winnerName: null };
+let modalOpen = false;
+
+// ============================================================
+// FIREBASE SYNC
+// ============================================================
+dbRef.on('value', (snap) => {
+  const data = snap.val();
+  if (!data) return;
+  if (modalOpen) return; // no pisar un modal abierto localmente
+
+  state = data;
+  if (state.players && !Array.isArray(state.players)) state.players = Object.values(state.players);
+  if (state.battleLog && !Array.isArray(state.battleLog)) state.battleLog = Object.values(state.battleLog);
+  if (state.bracket && !Array.isArray(state.bracket)) state.bracket = Object.values(state.bracket).map(r => Array.isArray(r) ? r : Object.values(r));
+
+  renderActiveBattles();
+  renderCompletedBattles();
+  renderRanking();
+});
+
+firebase.database().ref('.info/connected').on('value', (snap) => {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  if (snap.val() === true) {
+    el.textContent = '● EN LÍNEA — conectado al torneo';
+    el.style.color = '#00ff64';
+  } else {
+    el.textContent = '● SIN CONEXIÓN';
+    el.style.color = 'var(--neon-red)';
+  }
+});
+
+function saveState() {
+  dbRef.set(state).catch(err => { console.error(err); toast('⚠️ Error de sincronización'); });
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['battles','correct','ranking'][i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'ranking') renderRanking();
+  if (name === 'correct') renderCompletedBattles();
+  if (name === 'battles') renderActiveBattles();
+}
+
+// ============================================================
+// RENDER: BATALLAS ACTIVAS
+// ============================================================
+const roundNames = ['PRIMERA RONDA','CUARTOS DE FINAL','SEMIFINALES','GRAN FINAL'];
+
+function roundLabel(ri, totalWhenDone) {
+  return roundNames[Math.min(ri, roundNames.length - 1)];
+}
+
+function renderActiveBattles() {
+  const el = document.getElementById('activeBattlesList');
+  const champCard = document.getElementById('championCardRef');
+
+  if (state.tournamentDone) {
+    el.innerHTML = '<div class="empty-msg">🏆 El torneo ya finalizó.</div>';
+    champCard.style.display = 'block';
+    champCard.innerHTML = `
+      <div style="text-align:center; padding:20px">
+        <div style="font-size:40px">🏆</div>
+        <div style="font-family:'Orbitron',sans-serif; font-size:10px; letter-spacing:4px; color:var(--text-dim); margin:8px 0 4px">CAMPEÓN DEL TORNEO</div>
+        <div style="font-family:'Orbitron',sans-serif; font-size:24px; font-weight:900; color:var(--neon-gold); text-shadow:var(--glow-gold)">${escHtml(state.champion || '—')}</div>
+      </div>`;
+    return;
+  }
+  champCard.style.display = 'none';
+
+  if (!state.bracket.length) {
+    el.innerHTML = '<div class="empty-msg">El administrador aún no ha generado el bracket del torneo.</div>';
+    return;
+  }
+
+  const round = state.bracket[state.currentRound];
+  if (!round) { el.innerHTML = '<div class="empty-msg">Sin ronda activa.</div>'; return; }
+
+  const pending = round.filter(m => !m.done && !m.bye);
+  if (!pending.length) {
+    el.innerHTML = '<div class="empty-msg">✓ Todas las batallas de esta ronda están completas. Esperando que se genere la siguiente ronda...</div>';
+    return;
+  }
+
+  el.innerHTML = `<div class="round-tag">${roundLabel(state.currentRound)} — Ronda ${state.currentRound + 1}</div>` +
+    round.map((match, mi) => {
+      if (match.bye || match.done) return '';
+      return `
+        <div class="match-card active-match">
+          <div class="fighter-row">${escHtml(match.p1)}</div>
+          <div class="vs-divider">— VS —</div>
+          <div class="fighter-row">${escHtml(match.p2)}</div>
+          <div class="match-actions">
+            <button class="btn-red" style="width:100%" onclick="openBattle(${state.currentRound},${mi})">⚔️ REGISTRAR RESULTADO</button>
+          </div>
+        </div>`;
+    }).join('');
+}
+
+// ============================================================
+// RENDER: CORREGIR
+// ============================================================
+function renderCompletedBattles() {
+  const el = document.getElementById('completedBattlesList');
+  if (!state.bracket.length) {
+    el.innerHTML = '<div class="empty-msg">Aún no hay batallas registradas.</div>';
+    return;
+  }
+
+  let html = '';
+  for (let ri = state.bracket.length - 1; ri >= 0; ri--) {
+    const round = state.bracket[ri];
+    round.forEach((match, mi) => {
+      if (!match.done || match.bye) return;
+      html += `
+        <div class="match-card done">
+          <div class="round-tag">${roundLabel(ri)}</div>
+          <div class="fighter-row ${match.winner === match.p1 ? 'winner-row' : 'loser-row'}">
+            ${escHtml(match.p1)} <span style="font-family:'Orbitron',sans-serif; font-size:11px">${match.p1Score}pts</span>
+          </div>
+          <div class="vs-divider">— VS —</div>
+          <div class="fighter-row ${match.winner === match.p2 ? 'winner-row' : 'loser-row'}">
+            ${escHtml(match.p2)} <span style="font-family:'Orbitron',sans-serif; font-size:11px">${match.p2Score}pts</span>
+          </div>
+          <div class="match-actions">
+            <button class="btn-gold" style="width:100%" onclick="openCorrection(${ri},${mi})">✏️ CORREGIR RESULTADO</button>
+          </div>
+        </div>`;
+    });
+  }
+
+  el.innerHTML = html || '<div class="empty-msg">Aún no hay batallas registradas.</div>';
+}
+
+// ============================================================
+// RENDER: RANKING
+// ============================================================
+function renderRanking() {
+  const el = document.getElementById('refRanking');
+  if (!state.players || !state.players.length) {
+    el.innerHTML = '<div class="empty-msg">Sin bladers registrados.</div>';
+    return;
+  }
+  const sorted = [...state.players].sort((a, b) => b.pts - a.pts || b.wins - a.wins);
+  el.innerHTML = sorted.map((p, i) => {
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+    return `<div class="player-row">
+      <div class="player-rank ${rankClass}">${medal || '#' + (i+1)}</div>
+      <div class="player-name">${escHtml(p.name)}</div>
+      <span class="stat-badge badge-pts">${p.pts} PTS</span>
+      <span class="stat-badge badge-wins">V:${p.wins}</span>
+      <span class="stat-badge badge-loss">D:${p.losses}</span>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// MODAL: abrir para registrar (batalla activa)
+// ============================================================
+function openBattle(roundIdx, matchIdx) {
+  const match = state.bracket[roundIdx][matchIdx];
+  if (match.done) return;
+
+  modalMode = 'new';
+  modalOpen = true;
+  battle = { roundIdx, matchIdx, p1Score: 0, p2Score: 0, history: [], decided: false, winnerName: null };
+
+  document.getElementById('modalTitle').textContent = '⚡ BATTLE ⚡';
+  document.getElementById('modalSubtitle').textContent = 'Registrar resultado';
+  document.getElementById('correctionWarning').classList.remove('show');
+  document.getElementById('confirmBtn').textContent = '✓ CONFIRMAR GANADOR';
+  setupModalFighters(match);
+  document.getElementById('battleOverlay').classList.add('show');
+}
+
+// ============================================================
+// MODAL: abrir para corregir (batalla finalizada)
+// ============================================================
+function openCorrection(roundIdx, matchIdx) {
+  const match = state.bracket[roundIdx][matchIdx];
+  if (!match.done) return;
+
+  modalMode = 'edit';
+  modalOpen = true;
+  battle = {
+    roundIdx, matchIdx,
+    p1Score: match.p1Score || 0,
+    p2Score: match.p2Score || 0,
+    history: [],
+    decided: true,
+    winnerName: match.winner
+  };
+
+  document.getElementById('modalTitle').textContent = '✏️ CORREGIR RESULTADO';
+  document.getElementById('modalSubtitle').textContent = 'Modifica el marcador y confirma el nuevo ganador';
+
+  const isAdvanced = roundIdx < state.currentRound || state.tournamentDone;
+  document.getElementById('correctionWarning').classList.toggle('show', isAdvanced);
+  document.getElementById('confirmBtn').textContent = '✓ GUARDAR CORRECCIÓN';
+
+  setupModalFighters(match);
+  updateScoreDisplay();
+  showWinnerBanner(match.winner);
+  document.getElementById('battleOverlay').classList.add('show');
+}
+
+function setupModalFighters(match) {
+  document.getElementById('modalF1Name').textContent = match.p1;
+  document.getElementById('modalF2Name').textContent = match.p2;
+  document.getElementById('scoreLabel1').textContent = match.p1.split(' ')[0];
+  document.getElementById('scoreLabel2').textContent = match.p2.split(' ')[0];
+  document.getElementById('p1SectionTitle').textContent = 'PUNTOS PARA ' + match.p1.toUpperCase();
+  document.getElementById('p2SectionTitle').textContent = 'PUNTOS PARA ' + match.p2.toUpperCase();
+  updateScoreDisplay();
+  if (modalMode === 'new') {
+    document.getElementById('winBanner').classList.remove('show');
+    document.getElementById('confirmBtn').style.display = 'none';
+  }
+}
+
+function closeModal() {
+  modalOpen = false;
+  document.getElementById('battleOverlay').classList.remove('show');
+  // si estaba registrando, no persistimos un resultado parcial sin ganador
+}
+
+// ============================================================
+// PUNTOS
+// ============================================================
+function addPoint(player, pts, type) {
+  battle.history.push({ p1: battle.p1Score, p2: battle.p2Score, winnerName: battle.winnerName, decided: battle.decided });
+  if (player === 1) battle.p1Score += pts; else battle.p2Score += pts;
+  updateScoreDisplay();
+  checkWinner();
+}
+
+function undoPoint() {
+  if (!battle.history.length) return;
+  const prev = battle.history.pop();
+  battle.p1Score = prev.p1;
+  battle.p2Score = prev.p2;
+  battle.decided = prev.decided;
+  battle.winnerName = prev.winnerName;
+  updateScoreDisplay();
+  if (battle.decided) showWinnerBanner(battle.winnerName); else hideWinnerBanner();
+}
+
+function resetScore() {
+  battle.history.push({ p1: battle.p1Score, p2: battle.p2Score, winnerName: battle.winnerName, decided: battle.decided });
+  battle.p1Score = 0;
+  battle.p2Score = 0;
+  battle.decided = false;
+  battle.winnerName = null;
+  updateScoreDisplay();
+  hideWinnerBanner();
+}
+
+function updateScoreDisplay() {
+  document.getElementById('scoreP1').textContent = battle.p1Score;
+  document.getElementById('scoreP2').textContent = battle.p2Score;
+}
+
+function checkWinner() {
+  const match = state.bracket[battle.roundIdx][battle.matchIdx];
+  let winner = null;
+  if (battle.p1Score >= 4) winner = match.p1;
+  else if (battle.p2Score >= 4) winner = match.p2;
+
+  if (winner) {
+    battle.decided = true;
+    battle.winnerName = winner;
+    showWinnerBanner(winner);
+  } else {
+    hideWinnerBanner();
+  }
+}
+
+function showWinnerBanner(name) {
+  document.getElementById('winnerName').textContent = name;
+  document.getElementById('winBanner').classList.add('show');
+  document.getElementById('confirmBtn').style.display = '';
+}
+function hideWinnerBanner() {
+  document.getElementById('winBanner').classList.remove('show');
+  document.getElementById('confirmBtn').style.display = 'none';
+}
+
+// ============================================================
+// CONFIRMAR (registrar o corregir según el modo)
+// ============================================================
+function confirmModal() {
+  if (!battle.decided || !battle.winnerName) return;
+
+  if (modalMode === 'new') {
+    registerNewResult();
+  } else {
+    applyCorrection();
+  }
+}
+
+function registerNewResult() {
+  const match = state.bracket[battle.roundIdx][battle.matchIdx];
+  const winner = battle.winnerName;
+  const loser = winner === match.p1 ? match.p2 : match.p1;
+
+  match.winner = winner;
+  match.p1Score = battle.p1Score;
+  match.p2Score = battle.p2Score;
+  match.done = true;
+
+  const wp = state.players.find(p => p.name === winner);
+  const lp = state.players.find(p => p.name === loser);
+  if (wp) { wp.wins++; wp.pts += 3; wp.bouts++; }
+  if (lp) { lp.losses++; lp.bouts++; }
+
+  modalOpen = false;
+  document.getElementById('battleOverlay').classList.remove('show');
+
+  const round = state.bracket[state.currentRound];
+  if (round.every(m => m.done)) {
+    setTimeout(() => advanceRound(), 300);
+  } else {
+    saveState();
+    renderActiveBattles();
+    renderCompletedBattles();
+  }
+
+  toast('Ganador registrado: ' + winner);
+}
+
+function applyCorrection() {
+  const match = state.bracket[battle.roundIdx][battle.matchIdx];
+  const oldWinner = match.winner;
+  const oldLoser = oldWinner === match.p1 ? match.p2 : match.p1;
+  const newWinner = battle.winnerName;
+  const newLoser = newWinner === match.p1 ? match.p2 : match.p1;
+
+  if (oldWinner !== newWinner || match.p1Score !== battle.p1Score || match.p2Score !== battle.p2Score) {
+    // revertir estadísticas anteriores
+    const owp = state.players.find(p => p.name === oldWinner);
+    const olp = state.players.find(p => p.name === oldLoser);
+    if (owp) { owp.wins--; owp.pts -= 3; owp.bouts--; }
+    if (olp) { olp.losses--; olp.bouts--; }
+
+    // aplicar nuevas estadísticas
+    const nwp = state.players.find(p => p.name === newWinner);
+    const nlp = state.players.find(p => p.name === newLoser);
+    if (nwp) { nwp.wins++; nwp.pts += 3; nwp.bouts++; }
+    if (nlp) { nlp.losses++; nlp.bouts++; }
+
+    // caso especial: corrección de la gran final ya coronada
+    const isFinal = battle.roundIdx === state.bracket.length - 1 && state.bracket[battle.roundIdx].length === 1;
+    if (isFinal && state.tournamentDone && state.champion === oldWinner && oldWinner !== newWinner) {
+      if (owp) owp.pts -= 10;
+      state.champion = newWinner;
+      if (nwp) nwp.pts += 10;
+    }
+  }
+
+  match.winner = newWinner;
+  match.p1Score = battle.p1Score;
+  match.p2Score = battle.p2Score;
+
+  modalOpen = false;
+  document.getElementById('battleOverlay').classList.remove('show');
+  saveState();
+  renderCompletedBattles();
+  renderActiveBattles();
+  renderRanking();
+  toast('Resultado corregido: ' + newWinner + ' — ' + battle.p1Score + '/' + battle.p2Score);
+}
+
+// ============================================================
+// AVANZAR RONDA (idéntico al motor de la app de Torneo)
+// ============================================================
+function advanceRound() {
+  const currentMatches = state.bracket[state.currentRound];
+  if (!currentMatches.every(m => m.done)) { saveState(); renderActiveBattles(); return; }
+
+  const winners = currentMatches.map(m => m.winner);
+
+  if (winners.length === 1) {
+    state.tournamentDone = true;
+    state.champion = winners[0];
+    const champ = state.players.find(p => p.name === state.champion);
+    if (champ) champ.pts += 10;
+    saveState();
+    renderActiveBattles();
+    renderCompletedBattles();
+    renderRanking();
+    toast('🏆 ¡CAMPEÓN: ' + state.champion + '!');
+    return;
+  }
+
+  let nextRound = [];
+  for (let i = 0; i < winners.length; i += 2) {
+    if (winners[i + 1]) {
+      nextRound.push({ p1: winners[i], p2: winners[i + 1], winner: null, p1Score: 0, p2Score: 0, done: false });
+    } else {
+      nextRound.push({ p1: winners[i], p2: 'BYE', winner: winners[i], p1Score: 0, p2Score: 0, done: true, bye: true });
+    }
+  }
+
+  state.bracket.push(nextRound);
+  state.currentRound++;
+  saveState();
+  renderActiveBattles();
+  renderCompletedBattles();
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderActiveBattles();
+renderCompletedBattles();
+renderRanking();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "Beyblade X Tournament Tracker",
+  "short_name": "BBX Tracker",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#00d4ff",
+  "description": "Gestión de torneos Beyblade X con bracket, liga y sincronización en vivo con árbitros.",
+  "icons": []
+}
