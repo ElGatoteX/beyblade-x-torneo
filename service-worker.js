@@ -1,7 +1,8 @@
-// Service Worker mínimo — cachea la app para que abra rápido y funcione
-// aunque no haya conexión momentánea (los datos en vivo siguen necesitando
-// internet, ya que se sincronizan por Firebase).
-const CACHE_NAME = 'bbx-tracker-v1';
+// Service Worker — estrategia "network-first": siempre intenta traer la
+// versión más reciente de internet primero, y solo usa la copia guardada
+// si no hay conexión. Así evitamos que el celular se quede pegado en una
+// versión vieja de la app cada vez que subimos cambios.
+const CACHE_NAME = 'bbx-tracker-v2';
 const ASSETS = ['./index.html', './arbitros.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-arbitros-192.png', './icon-arbitros-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -22,6 +23,12 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
