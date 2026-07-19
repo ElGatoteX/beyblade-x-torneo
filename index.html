@@ -999,15 +999,20 @@ function saveState() {
 }
 
 dbRef.on('value', (snap) => {
-  const data = snap.val();
-  if (!data) return; // nada guardado aún en Firebase
   if (localBattleActive) return; // no pisar el modal de batalla abierto localmente
+  const data = snap.val() || {};
 
-  state = data;
-  // normalizar arrays que Firebase pudo convertir en objetos si tenían huecos
-  if (state.players && !Array.isArray(state.players)) state.players = Object.values(state.players);
-  if (state.battleLog && !Array.isArray(state.battleLog)) state.battleLog = Object.values(state.battleLog);
-  if (state.bracket && !Array.isArray(state.bracket)) state.bracket = Object.values(state.bracket).map(r => Array.isArray(r) ? r : Object.values(r));
+  // reconstruir el estado con valores por defecto seguros: si Firebase
+  // borró un campo por estar vacío (p.ej. players: []), nunca queda undefined.
+  state = {
+    players: Array.isArray(data.players) ? data.players : (data.players ? Object.values(data.players) : []),
+    season: data.season || 1,
+    bracket: Array.isArray(data.bracket) ? data.bracket : (data.bracket ? Object.values(data.bracket).map(r => Array.isArray(r) ? r : Object.values(r)) : []),
+    currentRound: data.currentRound || 0,
+    tournamentDone: !!data.tournamentDone,
+    champion: data.champion || null,
+    battleLog: Array.isArray(data.battleLog) ? data.battleLog : (data.battleLog ? Object.values(data.battleLog) : []),
+  };
 
   renderPlayerList();
   renderLeague();
