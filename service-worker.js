@@ -2,7 +2,7 @@
 // aunque no haya conexión momentánea (los datos en vivo siguen necesitando
 // internet, ya que se sincronizan por Firebase).
 const CACHE_NAME = 'bbx-tracker-v1';
-const ASSETS = ['./index.html', './arbitros.html', './manifest.json'];
+const ASSETS = ['./index.html', './arbitros.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-arbitros-192.png', './icon-arbitros-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
